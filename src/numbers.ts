@@ -86,9 +86,8 @@ function drawDigit(context: CanvasRenderingContext2D, number: boolean[][], x: nu
 
 // Set cell size and fill color
 const cellSize = 1;
-const fillColor: string = '#fff';
 
-function drawNumber(ctx: CanvasRenderingContext2D, d: number, x: number = 0, y: number = 0) {
+export function drawNumber(ctx: CanvasRenderingContext2D, d: number, x: number = 0, y: number = 0) {
     if (d > 999) {
         console.error("number is too long")
     }
@@ -96,7 +95,7 @@ function drawNumber(ctx: CanvasRenderingContext2D, d: number, x: number = 0, y: 
     let start = x
     for (let i = 0; i < s.length; i++) {
         let digit = parseInt(s[i]);
-        drawDigit(ctx, numbers[digit], start, y, cellSize, fillColor)
+        drawDigit(ctx, numbers[digit], start, y, cellSize, '#f00')
         start = start + numbers[digit][0].length + 1
     }
 }

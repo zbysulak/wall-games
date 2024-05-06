@@ -1,7 +1,7 @@
 // Create a WebSocket connection
 let ws: WebSocket
 
-async function initializeWs(timeout: number = 5000) {
+export async function initialize(timeout: number = 5000) {
     return new Promise((resolve, reject) => {
         ws = new WebSocket('ws://10.0.0.34/ws');
 
@@ -35,10 +35,13 @@ async function initializeWs(timeout: number = 5000) {
     });
 }
 
-function sendCanvas(context: CanvasRenderingContext2D) {
+export async function sendCanvas(context: CanvasRenderingContext2D) {
+    if (ws == undefined || ws.readyState != ws.OPEN) {
+        throw new Error("WebSocket is not initialized")
+    }
+
     if (context.canvas.width != 20 || context.canvas.height != 20) {
-        console.error("cant send canvas this big")
-        return
+        throw new Error("cant send canvas this big")
     }
 
     const bd = getBinaryData(context)

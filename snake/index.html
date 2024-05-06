@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Snake Game</title>
     <style>
@@ -12,8 +12,10 @@
 </head>
 <body>
 <canvas id="gameCanvas" width="20" height="20"></canvas>
-<script src="../src/websockets.js"></script>
-<script src="../src/numbers.js"></script>
-<script src="../src/snake.js"></script>
+<script type="module">
+    import snake from "../src/snake.js"
+    const canvas = document.getElementById("gameCanvas");
+    snake(canvas)
+</script>
 </body>
 </html>

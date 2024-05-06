@@ -1,13 +1,12 @@
-// Initialize canvas and context
-const canvas = <HTMLCanvasElement>document.getElementById("gameCanvas");
-const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
+import {drawNumber} from "./numbers.js";
+import {sendCanvas} from "./websockets.js";
 
 // Constants
 const GRID_SIZE = 20;
 const PIXEL_SIZE = 1;
 const CANVAS_SIZE = 20;
 const INITIAL_SNAKE_LENGTH = 5;
-const MOVE_INTERVAL = 300; // milliseconds
+const MOVE_INTERVAL = 150; // milliseconds
 
 // Variables
 let snake: Position[] = [];
@@ -19,7 +18,6 @@ let score = 0;
 
 // Initialize game
 async function init() {
-    await initializeWs();
     createSnake();
     createFood();
     gameLoop = setInterval(moveSnake, MOVE_INTERVAL);
@@ -65,7 +63,7 @@ function draw() {
 }
 
 // Move snake
-function moveSnake() {
+async function moveSnake() {
     // Move snake head
     let newX = snake[0].x;
     let newY = snake[0].y;
@@ -88,11 +86,12 @@ function moveSnake() {
     if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE || isCollision(newX, newY)) {
         clearInterval(gameLoop);
         ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-        drawNumber(ctx,score, 3, 7)
+        drawNumber(ctx, score, 3, 7)
     } else {
         // Check if snake eats food
         if (newX === food.x && newY === food.y) {
             createFood();
+            score++
         } else {
             snake.pop(); // Remove last segment if not eating food
         }
@@ -103,7 +102,7 @@ function moveSnake() {
         hue = (hue + 1) % 360; // Update hue for next draw
         draw();
     }
-    sendCanvas(ctx)
+    await sendCanvas(ctx)
 }
 
 // Check if there's a collision with snake body
@@ -124,8 +123,9 @@ function changeDirection(event: KeyboardEvent) {
     }
 }
 
-if (ctx == null) {
-    console.error("canvas not found")
-} else {
+let ctx: CanvasRenderingContext2D
+export default function initializeGame(canvas: HTMLCanvasElement) {
+// Initialize canvas and context
+    ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
     init()
 }
