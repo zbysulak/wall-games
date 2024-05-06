@@ -1,131 +1,128 @@
 import {drawNumber} from "./numbers.js";
 import {sendCanvas} from "./websockets.js";
 
-// Constants
-const GRID_SIZE = 20;
-const PIXEL_SIZE = 1;
-const CANVAS_SIZE = 20;
-const INITIAL_SNAKE_LENGTH = 5;
-const MOVE_INTERVAL = 150; // milliseconds
-
-// Variables
-let snake: Position[] = [];
-let food: Position = {x: 0, y: 0};
-let direction = 'r';
-let gameLoop: number;
-let hue = 0;
-let score = 0;
-
-// Initialize game
-async function init() {
-    createSnake();
-    createFood();
-    gameLoop = setInterval(moveSnake, MOVE_INTERVAL);
-    document.addEventListener("keydown", changeDirection);
-}
-
 interface Position {
     x: number
     y: number
 }
 
-// Create initial snake
-function createSnake() {
-    const startX = Math.floor(GRID_SIZE / 2);
-    const startY = Math.floor(GRID_SIZE / 2);
-    for (let i = 0; i < INITIAL_SNAKE_LENGTH; i++) {
-        snake.push({x: startX - i, y: startY});
-    }
-}
+export default class Snake {
+    private ctx: CanvasRenderingContext2D
+    private pixelSize: number;
 
-// Create food at random position
-function createFood() {
-    food.x = Math.floor(Math.random() * GRID_SIZE);
-    food.y = Math.floor(Math.random() * GRID_SIZE);
-}
+    // Constants
+    readonly gridSize: number;
+    readonly CANVAS_SIZE = 20;
+    readonly INITIAL_SNAKE_LENGTH = 5;
+    readonly MOVE_INTERVAL = 150; // milliseconds
 
-// Draw snake and food
-function draw() {
-    // Clear canvas
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    // Variables
+    private snake: Position[] = [];
+    private food: Position = {x: 0, y: 0};
+    private direction = 'r';
+    private gameLoop: number;
+    private hue = 0;
+    private score = 0;
 
-    // Draw snake
-    snake.forEach((segment, index) => {
-        // Calculate hue based on snake length
-        const segmentHue = (hue + index * 10) % 360;
-        ctx.fillStyle = `hsl(${segmentHue}, 100%, 50%)`;
-        ctx.fillRect(segment.x * PIXEL_SIZE, segment.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
-    });
-
-    // Draw food
-    ctx.fillStyle = "#f00";
-    ctx.fillRect(food.x * PIXEL_SIZE, food.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
-}
-
-// Move snake
-async function moveSnake() {
-    // Move snake head
-    let newX = snake[0].x;
-    let newY = snake[0].y;
-    switch (direction) {
-        case 'l':
-            newX--;
-            break;
-        case 'u':
-            newY--;
-            break;
-        case 'r':
-            newX++;
-            break;
-        case 'd':
-            newY++;
-            break;
+    constructor(canvas: HTMLCanvasElement, {snakeWidth = 1} = {}) {
+        this.ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
+        this.pixelSize = snakeWidth
+        if (this.pixelSize != 1 && this.pixelSize != 2)
+            throw new Error("invalid pixel size")
+        this.gridSize = this.CANVAS_SIZE / this.pixelSize;
+        this.createSnake();
+        this.createFood();
+        this.gameLoop = setInterval(() => this.moveSnake(), this.MOVE_INTERVAL);
+        document.addEventListener("keydown", (e) => this.changeDirection(e));
     }
 
-    // Check collision with walls or self
-    if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE || isCollision(newX, newY)) {
-        clearInterval(gameLoop);
-        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-        drawNumber(ctx, score, 3, 7)
-    } else {
-        // Check if snake eats food
-        if (newX === food.x && newY === food.y) {
-            createFood();
-            score++
-        } else {
-            snake.pop(); // Remove last segment if not eating food
+    private createSnake() {
+        const startX = Math.floor(this.gridSize / 2);
+        const startY = Math.floor(this.gridSize / 2);
+        for (let i = 0; i < this.INITIAL_SNAKE_LENGTH; i++) {
+            this.snake.push({x: startX - i, y: startY});
+        }
+    }
+
+    private createFood() {
+        this.food.x = Math.floor(Math.random() * this.gridSize);
+        this.food.y = Math.floor(Math.random() * this.gridSize);
+    }
+
+    private draw() {
+        // Clear canvas
+        this.ctx.clearRect(0, 0, this.CANVAS_SIZE, this.CANVAS_SIZE);
+
+        // Draw snake
+        this.snake.forEach((segment, index) => {
+            // Calculate hue based on snake length
+            const segmentHue = (this.hue + index * 10) % 360;
+            this.ctx.fillStyle = `hsl(${segmentHue}, 100%, 50%)`;
+            this.ctx.fillRect(segment.x * this.pixelSize, segment.y * this.pixelSize, this.pixelSize, this.pixelSize);
+        });
+
+        // Draw food
+        this.ctx.fillStyle = `hsl(${(this.hue + 180) % 360}, 100%, 50%)`;
+        this.ctx.fillRect(this.food.x * this.pixelSize, this.food.y * this.pixelSize, this.pixelSize, this.pixelSize);
+    }
+
+    private async moveSnake() {
+        // Move snake head
+        let newX = this.snake[0].x;
+        let newY = this.snake[0].y;
+        switch (this.direction) {
+            case 'l':
+                newX--;
+                break;
+            case 'u':
+                newY--;
+                break;
+            case 'r':
+                newX++;
+                break;
+            case 'd':
+                newY++;
+                break;
         }
 
-        // Add new head segment
-        snake.unshift({x: newX, y: newY});
+        // Check collision with walls or self
+        if (newX < 0 || newX >= this.gridSize || newY < 0 || newY >= this.gridSize || this.isCollision(newX, newY)) {
+            clearInterval(this.gameLoop);
+            this.ctx.clearRect(0, 0, this.CANVAS_SIZE, this.CANVAS_SIZE);
+            drawNumber(this.ctx, this.score, 3, 7)
+        } else {
+            // Check if snake eats food
+            if (newX === this.food.x && newY === this.food.y) {
+                this.createFood();
+                this.score++
+            } else {
+                this.snake.pop(); // Remove last segment if not eating food
+            }
 
-        hue = (hue + 1) % 360; // Update hue for next draw
-        draw();
+            // Add new head segment
+            this.snake.unshift({x: newX, y: newY});
+
+            this.hue = (this.hue + 10) % 360; // Update hue for next draw
+            this.draw();
+        }
+        await sendCanvas(this.ctx)
     }
-    await sendCanvas(ctx)
-}
 
-// Check if there's a collision with snake body
-function isCollision(x: number, y: number) {
-    return snake.some(segment => segment.x === x && segment.y === y);
-}
-
-// Change snake direction
-function changeDirection(event: KeyboardEvent) {
-    if ((event.code == 'a' || event.code == 'ArrowLeft') && direction != 'r') {
-        direction = 'l'
-    } else if ((event.code == 'd' || event.code == 'ArrowRight') && direction != 'l') {
-        direction = 'r'
-    } else if ((event.code == 'w' || event.code == 'ArrowUp') && direction != 'd') {
-        direction = 'u'
-    } else if ((event.code == 's' || event.code == 'ArrowDown') && direction != 'u') {
-        direction = 'd'
+    // Check if there's a collision with snake body
+    private isCollision(x: number, y: number) {
+        return this.snake.some(segment => segment.x === x && segment.y === y);
     }
-}
 
-let ctx: CanvasRenderingContext2D
-export default function initializeGame(canvas: HTMLCanvasElement) {
-// Initialize canvas and context
-    ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
-    init()
+    // Change snake direction
+    private changeDirection(event: KeyboardEvent) {
+        if ((event.code == 'a' || event.code == 'ArrowLeft') && this.direction != 'r') {
+            this.direction = 'l'
+        } else if ((event.code == 'd' || event.code == 'ArrowRight') && this.direction != 'l') {
+            this.direction = 'r'
+        } else if ((event.code == 'w' || event.code == 'ArrowUp') && this.direction != 'd') {
+            this.direction = 'u'
+        } else if ((event.code == 's' || event.code == 'ArrowDown') && this.direction != 'u') {
+            this.direction = 'd'
+        }
+    }
 }
