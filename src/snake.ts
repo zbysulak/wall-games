@@ -11,15 +11,16 @@ export default class Snake {
     private pixelSize: number;
 
     // Constants
-    readonly gridSize: number;
-    readonly CANVAS_SIZE = 20;
-    readonly INITIAL_SNAKE_LENGTH = 5;
-    readonly MOVE_INTERVAL = 150; // milliseconds
+    private readonly gridSize: number;
+    private readonly CANVAS_SIZE = 20;
+    private readonly INITIAL_SNAKE_LENGTH = 5;
+    private readonly MOVE_INTERVAL = 150; // milliseconds
 
     // Variables
     private snake: Position[] = [];
     private food: Position = {x: 0, y: 0};
     private direction = 'r';
+    // @ts-ignore it is set in start function, called by constructor
     private gameLoop: number;
     private hue = 0;
     private score = 0;
@@ -30,15 +31,28 @@ export default class Snake {
         if (this.pixelSize != 1 && this.pixelSize != 2)
             throw new Error("invalid pixel size")
         this.gridSize = this.CANVAS_SIZE / this.pixelSize;
-        this.createSnake();
-        this.createFood();
-        this.gameLoop = setInterval(() => this.moveSnake(), this.MOVE_INTERVAL);
         document.addEventListener("keydown", (e) => this.changeDirection(e));
+        this.start()
+    }
+
+    restart(){
+        this.direction = 'r'
+        this.ctx.clearRect(0, 0, this.CANVAS_SIZE, this.CANVAS_SIZE);
+        clearInterval(this.gameLoop)
+        this.start()
+    }
+
+    private start(){
+        this.score = 0
+        this.createSnake()
+        this.createFood()
+        this.gameLoop = setInterval(() => this.moveSnake(), this.MOVE_INTERVAL);
     }
 
     private createSnake() {
         const startX = Math.floor(this.gridSize / 2);
         const startY = Math.floor(this.gridSize / 2);
+        this.snake = []
         for (let i = 0; i < this.INITIAL_SNAKE_LENGTH; i++) {
             this.snake.push({x: startX - i, y: startY});
         }
