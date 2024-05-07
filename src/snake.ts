@@ -24,25 +24,28 @@ export default class Snake {
     private gameLoop: number;
     private hue = 0;
     private score = 0;
+    private walls: boolean;
+    private movedInNewDirection = true
 
-    constructor(canvas: HTMLCanvasElement, {snakeWidth = 1} = {}) {
+    constructor(canvas: HTMLCanvasElement, {snakeWidth = 1, walls = true} = {}) {
         this.ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
         this.pixelSize = snakeWidth
         if (this.pixelSize != 1 && this.pixelSize != 2)
             throw new Error("invalid pixel size")
         this.gridSize = this.CANVAS_SIZE / this.pixelSize;
+        this.walls = walls
         document.addEventListener("keydown", (e) => this.changeDirection(e));
         this.start()
     }
 
-    restart(){
+    restart() {
         this.direction = 'r'
         this.ctx.clearRect(0, 0, this.CANVAS_SIZE, this.CANVAS_SIZE);
         clearInterval(this.gameLoop)
         this.start()
     }
 
-    private start(){
+    private start() {
         this.score = 0
         this.createSnake()
         this.createFood()
@@ -99,12 +102,16 @@ export default class Snake {
                 break;
         }
 
-        // Check collision with walls or self
-        if (newX < 0 || newX >= this.gridSize || newY < 0 || newY >= this.gridSize || this.isCollision(newX, newY)) {
-            clearInterval(this.gameLoop);
-            this.ctx.clearRect(0, 0, this.CANVAS_SIZE, this.CANVAS_SIZE);
-            drawNumber(this.ctx, this.score, 3, 7)
+        // Check collision with self
+        if (this.isCollision(newX, newY)) {
+            this.gameEnd()
+        } else if (this.walls && (newX < 0 || newX >= this.gridSize || newY < 0 || newY >= this.gridSize)) {
+            this.gameEnd()
         } else {
+            // wrap snake around walls
+            newX = (newX + this.gridSize) % this.gridSize
+            newY = (newY + this.gridSize) % this.gridSize
+
             // Check if snake eats food
             if (newX === this.food.x && newY === this.food.y) {
                 this.createFood();
@@ -118,17 +125,25 @@ export default class Snake {
 
             this.hue = (this.hue + 10) % 360; // Update hue for next draw
             this.draw();
+            this.movedInNewDirection = true
         }
         await sendCanvas(this.ctx)
     }
 
+    private gameEnd() {
+        clearInterval(this.gameLoop);
+        this.ctx.clearRect(0, 0, this.CANVAS_SIZE, this.CANVAS_SIZE);
+        drawNumber(this.ctx, this.score, 3, 7)
+    }
+
     // Check if there's a collision with snake body
     private isCollision(x: number, y: number) {
-        return this.snake.some(segment => segment.x === x && segment.y === y);
+        return this.snake.some((segment, idx) => segment.x === x && segment.y === y && idx < this.snake.length - 1);
     }
 
     // Change snake direction
     private changeDirection(event: KeyboardEvent) {
+        if (!this.movedInNewDirection) return
         if ((event.code == 'a' || event.code == 'ArrowLeft') && this.direction != 'r') {
             this.direction = 'l'
         } else if ((event.code == 'd' || event.code == 'ArrowRight') && this.direction != 'l') {
@@ -138,5 +153,6 @@ export default class Snake {
         } else if ((event.code == 's' || event.code == 'ArrowDown') && this.direction != 'u') {
             this.direction = 'd'
         }
+        this.movedInNewDirection = false
     }
 }
