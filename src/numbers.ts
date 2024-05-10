@@ -99,3 +99,13 @@ export function drawNumber(ctx: CanvasRenderingContext2D, d: number, x: number =
         start = start + numbers[digit][0].length + 1
     }
 }
+
+export function getNumberWidth(d: number): number {
+    const s = d.toString()
+    let width = -1
+    for (let i = 0; i < s.length; i++) {
+        let digit = parseInt(s[i])
+        width += numbers[digit][0].length + 1
+    }
+    return width
+}

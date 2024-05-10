@@ -1,4 +1,4 @@
-import {drawNumber} from "./numbers.js";
+import {drawNumber, getNumberWidth} from "./numbers.js";
 
 const canvas = <HTMLCanvasElement>document.getElementById("tetrisCanvas");
 const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
@@ -64,7 +64,7 @@ function drawGrid() {
             const y = row * BLOCK_SIZE;
 
             if (grid[row][col] !== 0) {
-                ctx.fillStyle = COLORS[grid[row][col]-1];
+                ctx.fillStyle = COLORS[grid[row][col] - 1];
                 ctx.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
             }
         }
@@ -135,7 +135,7 @@ function checkCollision(tetromino: number[][], row: number, col: number) {
     return false;
 }
 
-function updateGrid() {
+function updateGrid(): boolean {
     for (let row = 0; row < currentTetromino.shape.length; row++) {
         for (let col = 0; col < currentTetromino.shape[row].length; col++) {
             if (currentTetromino.shape[row][col]) {
@@ -148,6 +148,8 @@ function updateGrid() {
     nextTetromino = getRandomTetromino();
     currentRow = currentTetromino.shape[0].every(e => e == 0) ? -1 : 0;
     currentCol = Math.floor(COLS / 2) - Math.floor(currentTetromino.shape[0].length / 2);
+
+    return !checkCollision(currentTetromino.shape, currentRow, currentCol)
 }
 
 function clearLines() {
@@ -191,9 +193,25 @@ document.addEventListener("keydown", function (event) {
     }
 });
 
-function draw() {
-    drawGrid();
-    requestAnimationFrame(update);
+let scoreX = 12
+let scoreY = 14
+let scoreDX = 1
+let scoreDY = 1
+let scoreTime = 0
+
+function scoreAnimation(time = 0) {
+    if (time - scoreTime > 50) {
+        scoreTime = time
+        ctx.clearRect(0, 0, 20, 20)
+        drawNumber(ctx, score, scoreX, scoreY)
+        scoreX += scoreDX
+        scoreY += scoreDY
+        if (scoreX + getNumberWidth(score) >= 20 || scoreX <= 0)
+            scoreDX *= -1;
+        if (scoreY + 5 >= 20 || scoreY <= 0)
+            scoreDY *= -1;
+    }
+    requestAnimationFrame(scoreAnimation)
 }
 
 function update(time = 0) {
@@ -202,10 +220,14 @@ function update(time = 0) {
         lastTime = time;
         moveTetromino(0, 1);
         if (checkCollision(currentTetromino.shape, currentRow + 1, currentCol)) {
-            updateGrid();
+            if (!updateGrid()) {
+                requestAnimationFrame(scoreAnimation)
+                return
+            }
         }
     }
-    draw();
+    drawGrid();
+    requestAnimationFrame(update);
 }
 
-draw();
+requestAnimationFrame(update);
