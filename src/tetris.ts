@@ -77,9 +77,6 @@ function drawGrid() {
 function drawNextTetromino() {
     for (let row = 0; row < nextTetromino.shape.length; row++) {
         for (let col = 0; col < nextTetromino.shape[row].length; col++) {
-            const x = col * BLOCK_SIZE;
-            const y = row * BLOCK_SIZE;
-
             ctx.fillStyle = COLORS[nextTetromino.colorIdx];
             if (nextTetromino.shape[row][col] !== 0) {
                 ctx.fillRect(12 + 2 * col, 1 + 2 * row, 2, 2);
