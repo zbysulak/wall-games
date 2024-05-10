@@ -64,7 +64,7 @@ function drawGrid() {
             const y = row * BLOCK_SIZE;
 
             if (grid[row][col] !== 0) {
-                ctx.fillStyle = COLORS[grid[row][col]];
+                ctx.fillStyle = COLORS[grid[row][col]-1];
                 ctx.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
             }
         }
@@ -139,7 +139,7 @@ function updateGrid() {
     for (let row = 0; row < currentTetromino.shape.length; row++) {
         for (let col = 0; col < currentTetromino.shape[row].length; col++) {
             if (currentTetromino.shape[row][col]) {
-                grid[currentRow + row][currentCol + col] = currentTetromino.colorIdx;
+                grid[currentRow + row][currentCol + col] = currentTetromino.colorIdx+1;
             }
         }
     }
