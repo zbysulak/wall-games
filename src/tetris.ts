@@ -1,4 +1,5 @@
 import {drawNumber, getNumberWidth} from "./numbers.js";
+import {initialize, sendCanvas} from "./websockets.js";
 
 const canvas = <HTMLCanvasElement>document.getElementById("tetrisCanvas");
 const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
@@ -40,11 +41,12 @@ let nextTetromino: Tetromino
 let currentRow: number
 let currentCol: number
 let lastTime: number
+let drawTime: number
 let score: number
 let gameOver: boolean
 
 function getRandomTetromino() {
-    const index = 0//Math.floor(Math.random() * TETROMINOS.length)
+    const index = Math.floor(Math.random() * TETROMINOS.length)
     const color = Math.floor(Math.random() * COLORS.length)
     return new Tetromino(TETROMINOS[index], color);
 }
@@ -69,6 +71,7 @@ function drawGrid() {
     drawTetromino();
     drawNumber(ctx, score, 12, 14)
     drawNextTetromino();
+    sendCanvas(ctx)
 }
 
 function drawNextTetromino() {
@@ -189,6 +192,7 @@ function restart() {
     currentTetromino = getRandomTetromino()
     setNewPosition()
     lastTime = 0;
+    drawTime = 0
     score = 0;
     gameOver = false;
     for (let row = 0; row < ROWS; row++) {
@@ -243,6 +247,7 @@ function scoreAnimation(time = 0) {
             scoreDX *= -1;
         if (scoreY + 5 >= 20 || scoreY <= 0)
             scoreDY *= -1;
+        sendCanvas(ctx)
     }
     scoreAnimationFrame = requestAnimationFrame(scoreAnimation)
 }
@@ -272,8 +277,12 @@ function update(time = 0) {
             groundedTimeout = setTimeout(() => groundedHandler(), GROUNDED_DELAY)
         }
     }
-    drawGrid();
+    if (time - drawTime > 1000 / 24) {
+        drawTime = time
+        drawGrid();
+    }
     gameAnimationFrame = requestAnimationFrame(update);
 }
 
+initialize()
 restart()
