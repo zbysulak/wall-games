@@ -36,7 +36,7 @@ class Tetromino {
 const grid: number[][] = [];
 let currentTetromino = getRandomTetromino();
 let nextTetromino = getRandomTetromino();
-let currentRow = 0;
+let currentRow = currentTetromino.shape[0].every(e => e == 0) ? -1 : 0;
 let currentCol = Math.floor(COLS / 2) - Math.floor(currentTetromino.shape[0].length / 2);
 let lastTime = 0;
 let score = 0;
@@ -139,14 +139,14 @@ function updateGrid() {
     for (let row = 0; row < currentTetromino.shape.length; row++) {
         for (let col = 0; col < currentTetromino.shape[row].length; col++) {
             if (currentTetromino.shape[row][col]) {
-                grid[currentRow + row][currentCol + col] = currentTetromino.colorIdx+1;
+                grid[currentRow + row][currentCol + col] = currentTetromino.colorIdx + 1;
             }
         }
     }
     clearLines();
     currentTetromino = nextTetromino
     nextTetromino = getRandomTetromino();
-    currentRow = 0;
+    currentRow = currentTetromino.shape[0].every(e => e == 0) ? -1 : 0;
     currentCol = Math.floor(COLS / 2) - Math.floor(currentTetromino.shape[0].length / 2);
 }
 
