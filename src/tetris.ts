@@ -44,7 +44,7 @@ let score: number
 let gameOver: boolean
 
 function getRandomTetromino() {
-    const index = Math.floor(Math.random() * TETROMINOS.length)
+    const index = 0//Math.floor(Math.random() * TETROMINOS.length)
     const color = Math.floor(Math.random() * COLORS.length)
     return new Tetromino(TETROMINOS[index], color);
 }
@@ -153,6 +153,7 @@ function clearLines() {
             grid.splice(row, 1);
             grid.unshift(Array(COLS).fill(0));
             lines++;
+            row++;
         }
     }
     switch (lines) {
