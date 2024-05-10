@@ -3,7 +3,7 @@ let ws: WebSocket
 
 export async function initialize(timeout: number = 5000) {
     return new Promise((resolve, reject) => {
-        ws = new WebSocket('ws://10.0.0.34/ws');
+        ws = new WebSocket('ws://10.0.0.43/ws');
 
         // Event handler for when the WebSocket connection is established
         ws.onopen = () => {
@@ -45,6 +45,7 @@ export async function sendCanvas(context: CanvasRenderingContext2D) {
     }
 
     const bd = getBinaryData(context)
+    console.log("bin",bd)
     ws.send(bd);
 }
 
@@ -54,7 +55,7 @@ function getBinaryData(ctx: CanvasRenderingContext2D): Uint8Array {
     const binaryImageData: number[] = [];
 
     // Iterate over columns, right to left
-    for (let x = ctx.canvas.width - 1; x >= 15; x--) {
+    for (let x = ctx.canvas.width - 1; x >= 0; x--) {
         for (let y = 0; y < ctx.canvas.height; y++) {
             const i = (y * ctx.canvas.width + x) * 4; // Index of the current pixel
             binaryImageData.push(data[i]);     // Red
@@ -62,7 +63,7 @@ function getBinaryData(ctx: CanvasRenderingContext2D): Uint8Array {
             binaryImageData.push(data[i + 2]); // Blue
         }
     }
-
+console.log(binaryImageData)
     // Convert to Uint8Array
     return new Uint8Array(binaryImageData);
 }

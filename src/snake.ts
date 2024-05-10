@@ -1,5 +1,5 @@
 import {drawNumber} from "./numbers.js";
-import {sendCanvas} from "./websockets.js";
+import {initialize, sendCanvas} from "./websockets.js";
 
 interface Position {
     x: number
@@ -29,13 +29,14 @@ export default class Snake {
 
     constructor(canvas: HTMLCanvasElement, {snakeWidth = 1, walls = true} = {}) {
         this.ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
+        initialize()
         this.pixelSize = snakeWidth
         if (this.pixelSize != 1 && this.pixelSize != 2)
             throw new Error("invalid pixel size")
         this.gridSize = this.CANVAS_SIZE / this.pixelSize;
         this.walls = walls
         document.addEventListener("keydown", (e) => this.changeDirection(e));
-        this.start()
+        //this.start()
     }
 
     restart() {

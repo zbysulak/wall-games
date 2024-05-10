@@ -1,3 +1,5 @@
+import {initialize, sendCanvas} from "./websockets.js";
+
 let canvas = <HTMLCanvasElement>document.getElementById("canvas")
 let ctx = <CanvasRenderingContext2D>canvas.getContext("2d")
 const w = canvas.width
@@ -5,7 +7,9 @@ const h = canvas.height
 
 let particles: Particle[] = [];
 
-setInterval(() => draw(), 1000 / 24)
+setInterval(() => draw(), 1000 / 10)
+
+initialize()
 
 function draw() {
     ctx.clearRect(0, 0, w, h);
@@ -21,6 +25,7 @@ function draw() {
             particles.splice(i, 1);
         }
     }
+    sendCanvas(ctx)
 }
 
 function random(min: number, max: number) {
@@ -62,7 +67,7 @@ class Particle {
     show() {
         ctx.beginPath()
         ctx.arc(this.x, this.y, this.d, 0, Math.PI * 2)
-        ctx.fillStyle = `rgb(${random(200, 255)}, ${random(0, 150)}, ${random(0,10)})`
+        ctx.fillStyle = `rgb(${random(200, 255)}, ${random(0, 150)}, ${random(0, 10)})`
         ctx.fill()
     }
 }
