@@ -34,18 +34,13 @@ class Tetromino {
 }
 
 const grid: number[][] = [];
-let currentTetromino = getRandomTetromino();
-let nextTetromino = getRandomTetromino();
-let currentRow = currentTetromino.shape[0].every(e => e == 0) ? -1 : 0;
-let currentCol = Math.floor(COLS / 2) - Math.floor(currentTetromino.shape[0].length / 2);
-let lastTime = 0;
-let score = 0;
-for (let row = 0; row < ROWS; row++) {
-    grid[row] = [];
-    for (let col = 0; col < COLS; col++) {
-        grid[row][col] = 0;
-    }
-}
+let currentTetromino: Tetromino
+let nextTetromino: Tetromino
+let currentRow: number
+let currentCol: number
+let lastTime: number
+let score: number
+let gameOver: boolean
 
 function getRandomTetromino() {
     const index = Math.floor(Math.random() * TETROMINOS.length)
@@ -145,9 +140,7 @@ function updateGrid(): boolean {
     }
     clearLines();
     currentTetromino = nextTetromino
-    nextTetromino = getRandomTetromino();
-    currentRow = currentTetromino.shape[0].every(e => e == 0) ? -1 : 0;
-    currentCol = Math.floor(COLS / 2) - Math.floor(currentTetromino.shape[0].length / 2);
+    setNewPosition()
 
     return !checkCollision(currentTetromino.shape, currentRow, currentCol)
 }
@@ -176,8 +169,33 @@ function clearLines() {
     }
 }
 
+function setNewPosition() {
+    nextTetromino = getRandomTetromino()
+    currentRow = currentTetromino.shape[0].every(e => e == 0) ? -1 : 0;
+    currentCol = Math.floor(COLS / 2) - Math.floor(currentTetromino.shape[0].length / 2);
+}
+
+function restart() {
+    if (scoreAnimationFrame != undefined) {
+        cancelAnimationFrame(scoreAnimationFrame);
+    }
+    currentTetromino = getRandomTetromino()
+    setNewPosition()
+    lastTime = 0;
+    score = 0;
+    gameOver = false;
+    for (let row = 0; row < ROWS; row++) {
+        grid[row] = [];
+        for (let col = 0; col < COLS; col++) {
+            grid[row][col] = 0;
+        }
+    }
+
+    requestAnimationFrame(update);
+}
+
 document.addEventListener("keydown", function (event) {
-    switch (event.key) {
+    switch (event.code) {
         case "ArrowLeft":
             moveTetromino(-1, 0);
             break;
@@ -190,6 +208,10 @@ document.addEventListener("keydown", function (event) {
         case "ArrowUp":
             rotateTetromino();
             break;
+        case "Space":
+            if (gameOver)
+                restart();
+            break;
     }
 });
 
@@ -198,6 +220,7 @@ let scoreY = 14
 let scoreDX = 1
 let scoreDY = 1
 let scoreTime = 0
+let scoreAnimationFrame: number | undefined = undefined
 
 function scoreAnimation(time = 0) {
     if (time - scoreTime > 50) {
@@ -211,7 +234,7 @@ function scoreAnimation(time = 0) {
         if (scoreY + 5 >= 20 || scoreY <= 0)
             scoreDY *= -1;
     }
-    requestAnimationFrame(scoreAnimation)
+    scoreAnimationFrame = requestAnimationFrame(scoreAnimation)
 }
 
 function update(time = 0) {
@@ -221,7 +244,8 @@ function update(time = 0) {
         moveTetromino(0, 1);
         if (checkCollision(currentTetromino.shape, currentRow + 1, currentCol)) {
             if (!updateGrid()) {
-                requestAnimationFrame(scoreAnimation)
+                gameOver = true
+                scoreAnimationFrame = requestAnimationFrame(scoreAnimation)
                 return
             }
         }
@@ -230,4 +254,4 @@ function update(time = 0) {
     requestAnimationFrame(update);
 }
 
-requestAnimationFrame(update);
+restart()
