@@ -7,6 +7,7 @@ const ROWS = 20;
 const COLS = 10;
 const BLOCK_SIZE = 1;
 const SPEED = 500;
+const GROUNDED_DELAY = 300;
 const COLORS = ["hsl(0,100%,50%)", "hsl(60,100%,50%)", "hsl(120,100%,50%)", "hsl(180,100%,50%)", "hsl(240,100%,50%)", "hsl(300,100%,50%)"];
 const TETROMINOS = [
     [
@@ -191,7 +192,7 @@ function restart() {
         }
     }
 
-    requestAnimationFrame(update);
+    gameAnimationFrame = requestAnimationFrame(update);
 }
 
 document.addEventListener("keydown", function (event) {
@@ -221,6 +222,7 @@ let scoreDX = 1
 let scoreDY = 1
 let scoreTime = 0
 let scoreAnimationFrame: number | undefined = undefined
+let gameAnimationFrame: number | undefined = undefined
 
 function scoreAnimation(time = 0) {
     if (time - scoreTime > 50) {
@@ -243,15 +245,18 @@ function update(time = 0) {
         lastTime = time;
         moveTetromino(0, 1);
         if (checkCollision(currentTetromino.shape, currentRow + 1, currentCol)) {
-            if (!updateGrid()) {
-                gameOver = true
-                scoreAnimationFrame = requestAnimationFrame(scoreAnimation)
-                return
-            }
+            setTimeout(() => {
+                if (!updateGrid()) {
+                    gameOver = true
+                    cancelAnimationFrame(<number>gameAnimationFrame)
+                    scoreAnimationFrame = requestAnimationFrame(scoreAnimation)
+                    return
+                }
+            }, GROUNDED_DELAY)
         }
     }
     drawGrid();
-    requestAnimationFrame(update);
+    gameAnimationFrame = requestAnimationFrame(update);
 }
 
 restart()
