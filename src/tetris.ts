@@ -179,6 +179,11 @@ function setNewPosition() {
 function restart() {
     if (scoreAnimationFrame != undefined) {
         cancelAnimationFrame(scoreAnimationFrame);
+        scoreAnimationFrame = undefined
+    }
+    if (groundedTimeout != undefined) {
+        clearTimeout(groundedTimeout)
+        groundedTimeout = undefined
     }
     currentTetromino = getRandomTetromino()
     setNewPosition()
@@ -204,6 +209,7 @@ document.addEventListener("keydown", function (event) {
             moveTetromino(1, 0);
             break;
         case "ArrowDown":
+            // if tetromino is on ground, should I cancel timeout and create new tetromino immediately?
             moveTetromino(0, 1);
             break;
         case "ArrowUp":
@@ -223,6 +229,7 @@ let scoreDY = 1
 let scoreTime = 0
 let scoreAnimationFrame: number | undefined = undefined
 let gameAnimationFrame: number | undefined = undefined
+let groundedTimeout: number | undefined = undefined
 
 function scoreAnimation(time = 0) {
     if (time - scoreTime > 50) {
@@ -239,20 +246,29 @@ function scoreAnimation(time = 0) {
     scoreAnimationFrame = requestAnimationFrame(scoreAnimation)
 }
 
+function groundedHandler(calledByUser = false) {
+    groundedTimeout = undefined
+    // if there is no collision after delay, continue..
+    if (!checkCollision(currentTetromino.shape, currentRow + 1, currentCol)) {
+        moveTetromino(0, 1)
+        if (calledByUser)
+            lastTime += GROUNDED_DELAY
+    } else {
+        if (!updateGrid()) {
+            gameOver = true
+            cancelAnimationFrame(<number>gameAnimationFrame)
+            scoreAnimationFrame = requestAnimationFrame(scoreAnimation)
+        }
+    }
+}
+
 function update(time = 0) {
     const deltaTime = time - lastTime;
     if (deltaTime > SPEED) {
         lastTime = time;
         moveTetromino(0, 1);
         if (checkCollision(currentTetromino.shape, currentRow + 1, currentCol)) {
-            setTimeout(() => {
-                if (!updateGrid()) {
-                    gameOver = true
-                    cancelAnimationFrame(<number>gameAnimationFrame)
-                    scoreAnimationFrame = requestAnimationFrame(scoreAnimation)
-                    return
-                }
-            }, GROUNDED_DELAY)
+            groundedTimeout = setTimeout(() => groundedHandler(), GROUNDED_DELAY)
         }
     }
     drawGrid();
