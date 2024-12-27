@@ -11,7 +11,8 @@
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}\\terminal\\app.js",
       "outFiles": ["${workspaceFolder}/**/*.js"],
-      "envFile": "${workspaceFolder}/terminal/.env"
+      "envFile": "${workspaceFolder}/terminal/.env",
+      "args": ["perlin"]
     }
   ]
 }

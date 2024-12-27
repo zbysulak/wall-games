@@ -1,11 +1,21 @@
-import { configDotenv } from "../node_modules/dotenv/lib/main.js"
-import { getNextArray } from "../src/fire.js"
+import { configDotenv } from "dotenv"
+import { getNextArray as nextFireArray } from "../src/fire.js"
+import { getNextArray as nextLinesArray } from "../src/lines.js"
+import { getNextArray as nextPerlinArray } from "../src/perlin.js"
 import { emptyArray } from "../src/utils.js"
 import { getCurtainWebSocket } from "./../src/websocketsNode.js"
+import { findIpByMacAddress } from "./wlanService.js"
 configDotenv()
 
+async function getEspAddress(): Promise<string> {
+  let ip = process.env.WS_IP
+  if (!ip) {
+    ip = await findIpByMacAddress(process.env.ESP_MAC!)
+  }
+  return `ws://${ip}${process.env.WS_PATH}`
+}
+
 const args = process.argv.slice(2)
-let ip = process.env.WS_IP!
 
 const mode: string = args.length == 0 ? "fire" : args[0]
 /*
@@ -57,16 +67,39 @@ process.stdin.on("data", (key) => {
   }
 })
 */
-getCurtainWebSocket(ip).then((ws) => {
-  const interval = 1000 / 5
-  const intervalId = setInterval(() => {
-    let a = getNextArray()
-    ws.sendArray(a)
-  }, interval)
-  process.on("SIGINT", () => {
-    console.log("\nReceived Ctrl+C. Exiting...")
-    clearInterval(intervalId)
-    ws.sendArray(emptyArray())
-    process.exit(0) // The process will exit only after all intervals are done
+
+getEspAddress().then((ip) => {
+  getCurtainWebSocket(ip).then((ws) => {
+    let nextFnc: () => number[][][]
+    switch (mode) {
+      case "fire":
+        nextFnc = nextFireArray
+        break
+      case "lines":
+        nextFnc = nextLinesArray
+        break
+      case "perlin":
+        nextFnc = nextPerlinArray
+        break
+    }
+
+    const interval = 1000 / 5
+    const intervalId = setInterval(() => {
+      let a = nextFnc()
+      ws.sendArray(setBrighttness(a, 10))
+    }, interval)
+    process.on("SIGINT", () => {
+      console.log("\nReceived Ctrl+C. Exiting...")
+      clearInterval(intervalId)
+      ws.sendArray(emptyArray())
+      process.exit(0) // The process will exit only after all intervals are done
+    })
   })
 })
+
+function setBrighttness(array: number[][][], brightness: number): number[][][] {
+  const multiplier = brightness / 100
+  return array.map((row) =>
+    row.map((cell) => cell.map((v) => Math.floor(v * multiplier)))
+  )
+}

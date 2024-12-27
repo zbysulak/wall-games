@@ -12,7 +12,10 @@
   "dependencies": {
     "canvas": "^3.0.0",
     "color": "^4.2.3",
+    "dns": "^0.2.2",
     "dotenv": "^16.4.7",
+    "multicast-dns": "^7.2.5",
+    "noisejs": "^2.1.0",
     "ws": "^8.18.0"
   }
 }
